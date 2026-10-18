@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131110">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Slots">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Slots</title>
+
+<!--
+  SEED DATA — user-editable. Everything here is copied into localStorage on first run;
+  after that, edit in-app (Library / Settings) or edit here + Settings › "Reset library to seed".
+  Values are restaurant/label ESTIMATES. Replace with the Body Stack v2 option + takeout tables.
+-->
+<script type="application/json" id="seed">
+{
+  "seedVersion": 1,
+  "tiers": {
+    "steady":   { "label": "Steady",   "kcal": 2400, "p": 175, "c": 260, "f": 74,
+                  "slots": { "breakfast": [500,45], "lunch": [600,45], "shake": [160,30], "dinner": [750,45], "dessert": [250,10], "buffer": [140,0] } },
+    "standard": { "label": "Standard", "kcal": 2200, "p": 175, "c": 215, "f": 70,
+                  "slots": { "breakfast": [450,45], "lunch": [550,45], "shake": [160,30], "dinner": [700,45], "dessert": [250,10], "buffer": [90,0] } },
+    "push":     { "label": "Push",     "kcal": 1950, "p": 175, "c": 165, "f": 65,
+                  "slots": { "breakfast": [400,45], "lunch": [450,45], "shake": [160,30], "dinner": [600,45], "dessert": [250,10], "buffer": [90,0] },
+                  "note": "Push only after 2+ steady weeks: protein hit 5+/7 days, steps on target, sleeping OK. Run it 2–3 weeks max, then back to Standard." }
+  },
+  "slots": [
+    { "id": "breakfast", "name": "Breakfast",     "lib": "breakfast", "takeout": true },
+    { "id": "lunch",     "name": "Lunch",         "lib": "lunch",     "takeout": true },
+    { "id": "shake",     "name": "Shake / Snack", "lib": "shake" },
+    { "id": "dinner",    "name": "Dinner",        "family": true,     "takeout": true },
+    { "id": "dessert",   "name": "Dessert",       "lib": "dessert",   "protected": true },
+    { "id": "buffer",    "name": "Buffer",        "lib": "shake" }
+  ],
+  "library": {
+    "breakfast": [
+      { "name": "Greek yogurt power bowl", "kcal": 440, "p": 50, "c": 44, "f": 7,  "note": "1 cup 0% Greek yogurt + 1 scoop whey + ½ cup berries + 15 g granola" },
+      { "name": "Egg bites ×2 + nonfat latte", "kcal": 470, "p": 37, "c": 41, "f": 16, "note": "Egg white & red pepper bites ×2 + grande nonfat latte. A bit short on protein." },
+      { "name": "Shake + 2 eggs + toast", "kcal": 410, "p": 46, "c": 20, "f": 15, "note": "Fairlife 30 g + 2 hard-boiled eggs + 1 slice light toast" },
+      { "name": "Protein oats", "kcal": 450, "p": 38, "c": 58, "f": 8, "note": "50 g oats + 1 scoop whey + ½ banana, made with water" },
+      { "name": "Protein burrito + Fairlife", "kcal": 460, "p": 50, "c": 38, "f": 12, "note": "Frozen high-protein breakfast burrito + Fairlife 30 g" }
+    ],
+    "lunch": [
+      { "name": "Rotisserie chicken rice cup", "kcal": 540, "p": 50, "c": 48, "f": 15, "note": "150 g rotisserie breast, skin off + microwave rice cup + salsa" },
+      { "name": "Panda: teriyaki + greens + ½ rice", "kcal": 580, "p": 45, "c": 61, "f": 16, "note": "Grilled teriyaki chicken + super greens + half white rice; skip extra sauce" },
+      { "name": "Subway 6\" double chicken", "kcal": 480, "p": 46, "c": 46, "f": 11, "note": "Rotisserie-style chicken, double meat, multigrain, veg, mustard, no mayo" },
+      { "name": "Turkey sandwich + Fairlife", "kcal": 540, "p": 52, "c": 48, "f": 14, "note": "Deli turkey on whole wheat with 1 cheese slice + Fairlife 30 g" },
+      { "name": "Poke bowl, half rice", "kcal": 560, "p": 42, "c": 58, "f": 16, "note": "Double fish, half rice / half greens, light sauce, no crunch" }
+    ],
+    "shake": [
+      { "name": "Fairlife 30 g", "kcal": 150, "p": 30, "c": 4, "f": 3, "note": "Nutrition Plan bottle" },
+      { "name": "Premier Protein", "kcal": 160, "p": 30, "c": 4, "f": 3, "note": "" },
+      { "name": "Whey scoop in water", "kcal": 120, "p": 24, "c": 3, "f": 2, "note": "1 scoop" },
+      { "name": "Core Power 26 g", "kcal": 170, "p": 26, "c": 8, "f": 5, "note": "" },
+      { "name": "Jerky + string cheese", "kcal": 160, "p": 20, "c": 7, "f": 6, "note": "1 oz jerky + 1 light string cheese" }
+    ],
+    "dessert": [
+      { "name": "Chocolate yogurt bowl", "kcal": 240, "p": 18, "c": 32, "f": 5, "note": "170 g 0% Greek yogurt + cocoa + 10 g chocolate chips + honey drizzle" },
+      { "name": "Casein pudding", "kcal": 220, "p": 26, "c": 16, "f": 5, "note": "1 scoop casein + cocoa + splash of milk, stirred thick" },
+      { "name": "Protein bar (Barebells)", "kcal": 210, "p": 20, "c": 18, "f": 8, "note": "" },
+      { "name": "Light ice cream, ½ pint", "kcal": 200, "p": 10, "c": 32, "f": 5, "note": "Halo Top–style" },
+      { "name": "Yasso bars ×2", "kcal": 200, "p": 10, "c": 32, "f": 4, "note": "" },
+      { "name": "Dark chocolate + berries", "kcal": 220, "p": 3, "c": 22, "f": 13, "note": "30 g dark chocolate + 1 cup berries. Low protein; fine some nights." }
+    ]
+  },
+  "takeout": {
+    "burgers": { "label": "Burgers / Fast food", "items": [
+      { "name": "In-N-Out Double-Double, Protein Style", "kcal": 520, "p": 33, "c": 11, "f": 39, "note": "Lettuce wrap, no fries" },
+      { "name": "In-N-Out Double-Double + fries", "kcal": 970, "p": 40, "c": 90, "f": 49, "note": "Two-slot meal. No soda." },
+      { "name": "Chick-fil-A 12 ct grilled nuggets + fruit", "kcal": 260, "p": 39, "c": 17, "f": 5, "note": "Best protein-per-calorie on the list" },
+      { "name": "Chick-fil-A grilled chicken sandwich", "kcal": 390, "p": 28, "c": 44, "f": 12, "note": "" },
+      { "name": "Chick-fil-A Deluxe + medium fries", "kcal": 920, "p": 34, "c": 88, "f": 47, "note": "Two-slot meal" },
+      { "name": "McDonald's Quarter Pounder w/ cheese", "kcal": 520, "p": 30, "c": 42, "f": 26, "note": "No fries" }
+    ]},
+    "mexican": { "label": "Mexican", "items": [
+      { "name": "Chipotle bowl: chicken, ½ rice, beans, fajitas, salsa", "kcal": 465, "p": 42, "c": 51, "f": 11, "note": "Lettuce base, no cheese/sour cream" },
+      { "name": "Chipotle bowl, double chicken", "kcal": 645, "p": 74, "c": 51, "f": 18, "note": "Same build, double chicken — protein bank" },
+      { "name": "Chipotle chicken burrito", "kcal": 975, "p": 58, "c": 117, "f": 30, "note": "Rice, beans, cheese, salsa. Two-slot meal." },
+      { "name": "3 carne asada street tacos", "kcal": 590, "p": 36, "c": 45, "f": 27, "note": "Corn tortillas, onion, cilantro, salsa" },
+      { "name": "California burrito", "kcal": 1100, "p": 45, "c": 110, "f": 55, "note": "San Diego classic. Two-slot meal — enjoy it." },
+      { "name": "Taco Bell Cantina chicken bowl", "kcal": 490, "p": 25, "c": 43, "f": 24, "note": "" }
+    ]},
+    "pizza": { "label": "Pizza / Italian", "items": [
+      { "name": "2 slices pepperoni, large hand-tossed", "kcal": 600, "p": 26, "c": 68, "f": 26, "note": "" },
+      { "name": "3 slices pepperoni, large hand-tossed", "kcal": 900, "p": 39, "c": 102, "f": 39, "note": "Two-slot meal" },
+      { "name": "Thin crust chicken & veg, 3 slices", "kcal": 660, "p": 38, "c": 66, "f": 26, "note": "" },
+      { "name": "Chicken Caesar salad (restaurant)", "kcal": 650, "p": 45, "c": 20, "f": 44, "note": "Dressing on the side saves ~150" },
+      { "name": "Grilled chicken + pasta, half boxed", "kcal": 650, "p": 50, "c": 60, "f": 20, "note": "Box half before you start" },
+      { "name": "Spaghetti & meatballs (restaurant)", "kcal": 1100, "p": 45, "c": 130, "f": 42, "note": "Two-slot meal" }
+    ]},
+    "mine": { "label": "My orders", "items": [] }
+  },
+  "family": {
+    "sizes": {
+      "light":  { "name": "Family meal · light",  "kcal": 550, "p": 35, "c": 55, "f": 20, "note": "Smaller plate, extra veg" },
+      "normal": { "name": "Family meal · normal", "kcal": 700, "p": 40, "c": 72, "f": 26, "note": "One plate, protein first" },
+      "big":    { "name": "Family meal · big",    "kcal": 900, "p": 50, "c": 92, "f": 34, "note": "Seconds / heavy dish" }
+    },
+    "addons": {
+      "yogurt": { "name": "+ Greek yogurt", "kcal": 100, "p": 17, "c": 6, "f": 0, "note": "170 g 0% Greek yogurt" },
+      "shake":  { "name": "+ Shake",        "kcal": 150, "p": 30, "c": 4, "f": 3, "note": "Fairlife 30 g" }
+    }
+  },
+  "templates": [
+    { "name": "Workday default", "entries": [
+      { "slot": "breakfast", "name": "Greek yogurt power bowl", "kcal": 440, "p": 50, "c": 44, "f": 7, "kind": "lib" },
+      { "slot": "lunch", "name": "Subway 6\" double chicken", "kcal": 480, "p": 46, "c": 46, "f": 11, "kind": "lib" },
+      { "slot": "shake", "name": "Fairlife 30 g", "kcal": 150, "p": 30, "c": 4, "f": 3, "kind": "lib" },
+      { "slot": "dinner", "name": "Family meal · normal", "kcal": 700, "p": 40, "c": 72, "f": 26, "kind": "family" },
+      { "slot": "dessert", "name": "Chocolate yogurt bowl", "kcal": 240, "p": 18, "c": 32, "f": 5, "kind": "lib" }
+    ]}
+  ]
+}
+</script>
+
+<style>
+:root{
+  --bg:#131110; --s1:#1b1917; --s2:#24211e; --s3:#2e2a26; --line:#35302b;
+  --tx:#f3efe9; --mu:#a39a90; --mu2:#6f675f;
+  --acc:#00e5ff; --acc-d:#00e5ff22; --acc-tx:#04181b;
+  --kc:#e0c9a0; --kc-d:#e0c9a01f;
+  --r:16px; --r2:12px;
+  --nav:68px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx)}
+body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums;overscroll-behavior-y:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+input,select,textarea{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:48px;width:100%;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--acc)}
+textarea{min-height:120px;font:13px/1.4 ui-monospace,Menlo,monospace}
+#app{max-width:560px;margin:0 auto;padding:calc(12px + var(--safe-t)) 16px calc(var(--nav) + var(--safe-b) + 96px)}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:28px 0 10px;font-weight:600}
+.muted{color:var(--mu)} .small{font-size:13px} .tiny{font-size:12px}
+.row{display:flex;align-items:center;gap:10px}
+.sp{flex:1}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stack>*+*{margin-top:10px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:6px;margin-bottom:14px}
+.navbtn{width:48px;height:48px;border-radius:12px;background:var(--s1);border:1px solid var(--line);font-size:20px;display:grid;place-items:center}
+.datebtn{flex:1;text-align:center;min-height:48px}
+.datebtn b{display:block;font-size:18px}
+.chip-tier{padding:0 12px;height:48px;border-radius:12px;background:var(--s1);border:1px solid var(--line);font-size:13px;font-weight:600}
+
+/* hero */
+.hero{display:flex;gap:16px;align-items:center}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .big{font-size:38px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.ring .lbl{font-size:12px;color:var(--mu);margin-top:4px}
+.kcbox{flex:1;min-width:0}
+.kcnum{font-size:22px;font-weight:700}
+.bar{height:10px;border-radius:6px;background:var(--s3);overflow:hidden;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.bar i.k{background:var(--kc)} .bar i.p{background:var(--acc)} .bar i.pl{background:repeating-linear-gradient(135deg,#ffffff22 0 4px,transparent 4px 8px)}
+.bar i.over{background:repeating-linear-gradient(135deg,var(--kc) 0 6px,#bfa77e 6px 12px)}
+.bar.thin{height:6px}
+.macros{display:flex;gap:14px;margin-top:10px;font-size:13px;color:var(--mu)}
+.macros b{color:var(--tx);font-weight:600}
+
+/* slots */
+.slot{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);margin-top:12px;overflow:hidden}
+.slot.open{border-color:#4a443d}
+.slot-h{padding:14px 14px 10px}
+.slot-h .name{font-weight:650;font-size:17px}
+.lock{font-size:11px;color:var(--kc);border:1px solid #e0c9a055;border-radius:20px;padding:2px 8px;margin-left:6px;font-weight:600;letter-spacing:.02em}
+.borrowtag{font-size:11px;color:var(--mu);margin-left:6px}
+.slot-nums{font-size:13px;color:var(--mu);text-align:right;line-height:1.3}
+.slot-nums b{color:var(--tx)}
+.slot-bars{display:grid;gap:5px;margin-top:10px}
+.entries{border-top:1px solid var(--line)}
+.entry{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;min-height:56px;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:0}
+.entry .en{flex:1;min-width:0}
+.entry .en div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry.planned{background:repeating-linear-gradient(135deg,transparent 0 10px,#ffffff05 10px 20px)}
+.entry.planned .en{opacity:.7}
+.x{width:48px;height:48px;border-radius:10px;color:var(--mu);font-size:20px;display:grid;place-items:center}
+.x:active{background:var(--s3)}
+.confirm{height:44px;padding:0 14px;border-radius:10px;background:var(--acc);color:var(--acc-tx);font-weight:700;font-size:14px}
+.addbtn{width:100%;min-height:52px;border-top:1px solid var(--line);color:var(--acc);font-weight:650;font-size:15px}
+.addbtn:active{background:var(--s2)}
+.pane{border-top:1px solid var(--line);padding:12px;background:#171513}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-2px -2px 12px;padding:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;height:40px;padding:0 14px;border-radius:20px;background:var(--s2);color:var(--mu);font-size:14px;font-weight:600;border:1px solid transparent}
+.tab.on{background:var(--acc-d);color:var(--acc);border-color:#00e5ff55}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;width:100%;min-height:60px;padding:10px 12px;border-radius:12px;background:var(--s2);border:1px solid var(--line)}
+.opt:active{background:var(--s3);transform:scale(.99)}
+.opt .on{flex:1;min-width:0}
+.opt .on div:first-child{font-weight:600;font-size:15px}
+.opt .mac{font-size:12px;color:var(--mu);text-align:right;white-space:nowrap}
+.opt .mac b{color:var(--acc);font-size:15px;display:block}
+.seg{display:flex;background:var(--s2);border-radius:12px;padding:4px;gap:4px;border:1px solid var(--line)}
+.seg button{flex:1;min-height:48px;border-radius:9px;font-weight:600;font-size:14px;color:var(--mu)}
+.seg button.on{background:var(--s3);color:var(--tx)}
+.seg button small{display:block;font-weight:500;font-size:11px;color:var(--mu)}
+.btn{min-height:52px;border-radius:12px;padding:0 18px;font-weight:700;background:var(--s3);width:100%}
+.btn.pri{background:var(--acc);color:var(--acc-tx)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--tx)}
+.btn.sm{min-height:44px;width:auto;font-size:14px;padding:0 14px}
+.btn:active{filter:brightness(1.1)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+label.f{display:block;font-size:12px;color:var(--mu)}
+label.f input{margin-top:4px}
+.check{display:flex;align-items:center;gap:12px;min-height:52px;padding:4px 0;cursor:pointer}
+.check input{width:24px;height:24px;min-height:0;accent-color:var(--acc);flex:none}
+.borrow{padding:4px 0}
+.borrow p{margin:0 0 10px}
+
+/* banners */
+.banner{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r2);background:var(--s2);border:1px solid var(--line);margin-top:12px;font-size:14px}
+.banner .sp{min-width:0}
+.pushnote{font-size:13px;color:var(--mu);margin-top:8px;padding:10px 12px;border-left:3px solid var(--kc);background:var(--s2);border-radius:0 10px 10px 0}
+
+/* week */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--s1);border:1px solid var(--line);border-radius:var(--r2);padding:12px}
+.tile .v{font-size:24px;font-weight:700}
+.tile .k{font-size:12px;color:var(--mu)}
+.tile.hero .v{color:var(--acc)}
+.drow{display:grid;grid-template-columns:62px 1fr 1fr 96px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.drow input{min-height:44px;padding:8px;text-align:right}
+.drow .ok{color:var(--acc);margin-left:4px}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dot{width:16px;height:16px;border-radius:5px;background:var(--s3)}
+.dot.on{background:var(--acc)}
+.dot.today{outline:2px solid var(--mu2);outline-offset:1px}
+.streak{display:inline-flex;align-items:center;gap:8px;font-weight:650}
+.streak.dim{opacity:.45}
+
+/* library */
+.libitem{padding:12px 0;border-bottom:1px solid var(--line)}
+.libitem .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.form{background:var(--s2);border-radius:12px;padding:12px;margin-top:8px}
+.form input{background:var(--s1)}
+
+/* nav */
+nav{position:fixed;left:0;right:0;bottom:0;background:#161412ee;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:var(--safe-b);z-index:10}
+nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{height:var(--nav);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;color:var(--mu);font-weight:600}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--acc)}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(var(--nav) + var(--safe-b) + 12px);transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.18s;z-index:20;width:calc(100% - 32px);max-width:528px}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast .t{display:flex;align-items:center;gap:10px;background:#f3efe9;color:#131110;border-radius:14px;padding:6px 6px 6px 16px;min-height:56px;font-weight:600;font-size:14px;box-shadow:0 8px 30px #0008}
+#toast .t span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#toast button{height:44px;padding:0 16px;border-radius:10px;background:#131110;color:var(--acc);font-weight:700}
+#toast .bar{height:3px;background:#0002;margin:0 14px;border-radius:2px;position:relative;top:-6px}
+#toast .bar i{background:#131110}
+@keyframes drain{from{width:100%}to{width:0}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<nav><div class="in" id="nav"></div></nav>
+
+<script>
+'use strict';
+/* ============================== core ============================== */
+const SEED = JSON.parse(document.getElementById('seed').textContent);
+const KEY = 'slots_state', SHARED = 'ac_shared_body';
+const KCAL_FLOOR = 1800, BIG = 900, GUESS_PAD = 1.2, UNDO_MS = 5000;
+const $ = (s, el = document) => el.querySelector(s);
+const clone = o => JSON.parse(JSON.stringify(o));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const r0 = n => Math.round(Number(n) || 0);
+const fmt = n => r0(n).toLocaleString('en-US');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dkey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const kdate = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (k, n) => { const d = kdate(k); d.setDate(d.getDate() + n); return dkey(d); };
+const today = () => dkey();
+const dayLabel = k => kdate(k).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const wd = k => kdate(k).toLocaleDateString('en-US', { weekday: 'short' });
+
+function fresh() {
+  const s = {
+    v: 1,
+    settings: { tier: 'standard', stepsGoal: 8000, lastBackup: null, backupSnooze: null, created: today() },
+    tiers: clone(SEED.tiers), slots: clone(SEED.slots), library: clone(SEED.library),
+    takeout: clone(SEED.takeout), family: clone(SEED.family), templates: clone(SEED.templates),
+    days: {}, audits: {}
+  };
+  ensureIds(s);
+  return s;
+}
+function ensureIds(s) {
+  Object.values(s.library).forEach(a => a.forEach(i => i.id ||= uid()));
+  Object.values(s.takeout).forEach(c => c.items.forEach(i => i.id ||= uid()));
+  s.templates.forEach(t => t.id ||= uid());
+}
+function valid(s) { return !!(s && typeof s === 'object' && s.days && s.library && s.tiers && s.slots && s.settings && s.takeout); }
+function migrate(s) {
+  const f = fresh();
+  for (const k of Object.keys(f)) if (s[k] === undefined) s[k] = f[k];
+  for (const k of Object.keys(f.settings)) if (s.settings[k] === undefined) s.settings[k] = f.settings[k];
+  // Dessert is protected — always present, always flagged.
+  let d = s.slots.find(x => x.id === 'dessert');
+  if (!d) { d = clone(SEED.slots.find(x => x.id === 'dessert')); s.slots.splice(4, 0, d); }
+  d.protected = true;
+  if (!s.tiers[s.settings.tier]) s.settings.tier = 'standard';
+  ensureIds(s);
+  return s;
+}
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const s = JSON.parse(raw); if (valid(s)) return migrate(s); } } catch (e) {}
+  return fresh();
+}
+let state = load();
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { toast('Storage is full — export a backup'); }
+  writeShared();
+}
+/* Merge into ac_shared_body — only touch the four fields Slots owns. */
+function writeShared() {
+  let cur = {};
+  try {
+    const raw = localStorage.getItem(SHARED);
+    if (raw) { cur = JSON.parse(raw); if (!cur || typeof cur !== 'object' || Array.isArray(cur)) return; }
+  } catch (e) { return; } // unreadable: never clobber another app's data
+  const t = totals(today());
+  const merged = Object.assign({}, cur, {
+    kcal_today: r0(t.kcal), protein_today: r0(t.p), log_streak: streak().count, updated_at: new Date().toISOString()
+  });
+  try { localStorage.setItem(SHARED, JSON.stringify(merged)); } catch (e) {}
+}
+function readShared() { try { return JSON.parse(localStorage.getItem(SHARED) || '{}') || {}; } catch (e) { return {}; } }
+
+/* ============================== model ============================== */
+const peekDay = k => state.days[k] || { entries: [], steps: null };
+const day = k => state.days[k] ||= { entries: [], steps: null };
+const tier = () => state.tiers[state.settings.tier];
+const slotById = id => state.slots.find(s => s.id === id);
+const slotName = id => (slotById(id) || {}).name || id;
+const isProtected = id => !!(slotById(id) || {}).protected;
+const BORROW_SOURCES = [['shake', 1], ['lunch', .5], ['dinner', .5]];
+const canBorrowFrom = id => !isProtected(id) && BORROW_SOURCES.some(([s]) => s === id);
+
+function totals(k, withPlanned = false) {
+  const t = { kcal: 0, p: 0, c: 0, f: 0, plannedKcal: 0, plannedP: 0 };
+  peekDay(k).entries.forEach(e => {
+    if (e.planned) { t.plannedKcal += e.kcal; t.plannedP += e.p; if (!withPlanned) return; }
+    t.kcal += e.kcal; t.p += e.p; t.c += e.c; t.f += e.f;
+  });
+  return t;
+}
+function budgets(k) {
+  const T = tier(), b = {};
+  state.slots.forEach(s => { const v = T.slots[s.id] || [0, 0]; b[s.id] = { kcal: v[0], p: v[1], lent: 0, borrowed: 0 }; });
+  peekDay(k).entries.forEach(e => {
+    const br = e.borrow;
+    if (!br || !b[br.from] || !b[e.slot] || !canBorrowFrom(br.from)) return;
+    b[e.slot].kcal += br.kcal; b[e.slot].borrowed += br.kcal;
+    b[br.from].kcal -= br.kcal; b[br.from].lent += br.kcal;
+  });
+  return b;
+}
+function borrowOptions(k, target) {
+  const T = tier(), used = new Set(peekDay(k).entries.filter(e => e.borrow).map(e => e.borrow.from));
+  return BORROW_SOURCES
+    .filter(([id]) => id !== target && canBorrowFrom(id) && slotById(id))
+    .map(([id, frac]) => ({ from: id, kcal: r0((T.slots[id] || [0])[0] * frac), label: (frac < 1 ? '½ ' : '') + slotName(id), used: used.has(id) }))
+    .filter(o => o.kcal > 0);
+}
+const logged = k => peekDay(k).entries.some(e => !e.planned);
+function streak() {
+  const count = Object.keys(state.days).filter(logged).length;
+  const t = today();
+  return { count, dim: count > 0 && !logged(t) && !logged(addDays(t, -1)) };
+}
+function backupDue() {
+  const s = state.settings, t = today();
+  if (s.backupSnooze && s.backupSnooze > t) return false;
+  if (!Object.keys(state.days).some(logged)) return false;
+  if (!s.lastBackup) return addDays(s.created || t, 7) <= t;
+  return addDays(s.lastBackup, 30) <= t;
+}
+const lastSunday = (k = today()) => addDays(k, -kdate(k).getDay());
+
+/* ============================== undo / toast ============================== */
+let undoSnap = null, toastTimer = null;
+function commit(msg, fn, undoable = true) {
+  const snap = JSON.stringify(state);
+  fn();
+  save(); render();
+  if (undoable) { undoSnap = snap; toast(msg, true); } else if (msg) toast(msg);
+}
+function undo() {
+  if (!undoSnap) return;
+  state = migrate(JSON.parse(undoSnap)); undoSnap = null;
+  save(); render(); toast('Undone');
+}
+function toast(msg, withUndo = false) {
+  const el = $('#toast');
+  clearTimeout(toastTimer);
+  el.innerHTML = `<div class="t"><span>${esc(msg)}</span>${withUndo ? '<button data-act="undo">Undo</button>' : ''}</div>` +
+    (withUndo ? `<div class="bar"><i style="animation:drain ${UNDO_MS}ms linear forwards"></i></div>` : '');
+  el.classList.add('show');
+  toastTimer = setTimeout(() => { el.classList.remove('show'); if (withUndo) undoSnap = null; }, withUndo ? UNDO_MS : 2200);
+}
+
+/* ============================== UI state ============================== */
+const ui = {
+  screen: 'today', date: today(), open: null, tab: {}, pending: null,
+  fam: { size: 'normal', add: null }, toCat: 'burgers',
+  libCat: 'breakfast', libEdit: null, armed: null, tplName: false
+};
+const isFuture = k => k > today();
+
+/* ============================== actions ============================== */
+function makeEntry(slot, it, kind, extra = {}) {
+  return { id: uid(), slot, name: it.name, kcal: r0(it.kcal), p: r0(it.p), c: r0(it.c), f: r0(it.f),
+           kind, note: it.note || '', t: Date.now(), planned: isFuture(ui.date), ...extra };
+}
+function tryAdd(e) {
+  if (e.kcal >= BIG && !e.borrow && borrowOptions(ui.date, e.slot).length) { ui.pending = e; render(); return; }
+  doAdd(e);
+}
+function doAdd(e) {
+  ui.pending = null;
+  commit(`${e.planned ? 'Planned' : 'Logged'} ${e.name} · ${fmt(e.kcal)} kcal`, () => day(ui.date).entries.push(e));
+}
+function libFor(slot) { const s = slotById(slot); return s && s.lib ? state.library[s.lib] || [] : []; }
+function findItem(src, id) {
+  if (src === 'to') { for (const c of Object.values(state.takeout)) { const i = c.items.find(x => x.id === id); if (i) return i; } return null; }
+  return (state.library[src] || []).find(x => x.id === id) || null;
+}
+
+const A = {
+  nav: d => { ui.screen = d.s; ui.libEdit = null; ui.armed = null; render(); scrollTo(0, 0); },
+  undo: () => undo(),
+  day: d => { ui.date = d.k === 'today' ? today() : addDays(ui.date, +d.n); ui.open = null; ui.pending = null; render(); },
+  open: d => { ui.open = ui.open === d.slot ? null : d.slot; ui.pending = null; render(); },
+  tab: d => { ui.tab[d.slot] = d.t; render(); },
+  pick: d => { const it = findItem(d.src, d.id); if (it) tryAdd(makeEntry(d.slot, it, d.src === 'to' ? 'takeout' : 'lib')); },
+  toCat: d => { ui.toCat = d.c; render(); },
+  famSize: d => { ui.fam.size = d.v; render(); },
+  famAdd: d => { ui.fam.add = ui.fam.add === d.v ? null : d.v; render(); },
+  famLog: d => {
+    const s = state.family.sizes[ui.fam.size], a = ui.fam.add ? state.family.addons[ui.fam.add] : null;
+    const it = { name: s.name + (a ? ' ' + a.name : ''), kcal: s.kcal + (a ? a.kcal : 0), p: s.p + (a ? a.p : 0), c: s.c + (a ? a.c : 0), f: s.f + (a ? a.f : 0) };
+    tryAdd(makeEntry(d.slot, it, 'family'));
+  },
+  guess: d => {
+    const pane = $(`[data-pane="${d.slot}"]`), kc = r0($('[name=gk]', pane).value);
+    if (kc <= 0) { $('[name=gk]', pane).focus(); return; }
+    const p = r0($('[name=gp]', pane).value), name = $('[name=gn]', pane).value.trim() || 'Unplanned meal';
+    const padded = r0(kc * GUESS_PAD), rest = Math.max(0, padded - p * 4);
+    // protein kept as entered (conservative); padded kcal split ~50/50 carbs/fat by energy for macro display
+    tryAdd(makeEntry(d.slot, { name: name + ' (best guess)', kcal: padded, p, c: rest * .5 / 4, f: rest * .5 / 9, note: `Guessed ${kc} + 20% padding` }, 'guess', { guess: kc }));
+  },
+  custom: d => {
+    const pane = $(`[data-pane="${d.slot}"]`), v = n => $(`[name=${n}]`, pane).value;
+    const it = { name: v('cn').trim() || 'Custom', kcal: r0(v('ck')), p: r0(v('cp')), c: r0(v('cc')), f: r0(v('cf')) };
+    if (it.kcal <= 0) { $('[name=ck]', pane).focus(); return; }
+    const saveIt = $('[name=csave]', pane).checked;
+    if (saveIt) { state.takeout.mine.items.push({ ...it, id: uid(), note: '' }); }
+    tryAdd(makeEntry(d.slot, it, 'custom'));
+  },
+  borrow: d => { const e = ui.pending; if (!e) return; const o = borrowOptions(ui.date, e.slot).find(x => x.from === d.from); if (o) e.borrow = { from: o.from, kcal: o.kcal }; doAdd(e); },
+  noBorrow: () => { if (ui.pending) doAdd(ui.pending); },
+  cancelBorrow: () => { ui.pending = null; render(); },
+  rm: d => { const e = peekDay(ui.date).entries.find(x => x.id === d.id); if (!e) return;
+    commit(`Removed ${e.name}`, () => { const D = day(ui.date); D.entries = D.entries.filter(x => x.id !== d.id); }); },
+  confirm: d => { const e = peekDay(ui.date).entries.find(x => x.id === d.id); if (!e) return;
+    commit(`Confirmed ${e.name}`, () => { e.planned = false; e.t = Date.now(); }); },
+  confirmAll: () => commit('Confirmed all planned', () => day(ui.date).entries.forEach(e => { e.planned = false; })),
+  copyTomorrow: () => {
+    const src = peekDay(ui.date).entries, tgt = addDays(ui.date, 1);
+    commit(`Copied to ${dayLabel(tgt)}`, () => { const D = day(tgt); D.entries = D.entries.filter(e => !e.planned).concat(src.map(e => ({ ...clone(e), id: uid(), planned: true, t: Date.now() }))); });
+  },
+  applyTpl: d => {
+    const t = state.templates.find(x => x.id === d.id); if (!t) return;
+    const tgt = d.to === 'here' ? ui.date : addDays(ui.date, 1);
+    commit(`“${t.name}” planned for ${dayLabel(tgt)}`, () => { const D = day(tgt); D.entries = D.entries.filter(e => !e.planned).concat(t.entries.map(e => ({ ...clone(e), id: uid(), planned: isFuture(tgt) || tgt === today(), t: Date.now() }))); });
+  },
+  tplNameToggle: () => { ui.tplName = !ui.tplName; render(); if (ui.tplName) setTimeout(() => $('[name=tplname]')?.focus(), 30); },
+  saveTpl: () => {
+    const name = ($('[name=tplname]').value || '').trim() || `Day ${state.templates.length + 1}`;
+    const entries = peekDay(ui.date).entries.map(({ slot, name, kcal, p, c, f, kind, borrow, note }) => ({ slot, name, kcal, p, c, f, kind, borrow, note }));
+    if (!entries.length) { toast('Nothing to save yet'); return; }
+    ui.tplName = false;
+    commit(`Saved template “${name}”`, () => state.templates.push({ id: uid(), name, entries }));
+  },
+  delTpl: d => commit('Template deleted', () => { state.templates = state.templates.filter(t => t.id !== d.id); }),
+  snooze: () => commit('Backup reminder snoozed a week', () => { state.settings.backupSnooze = addDays(today(), 7); }),
+  audit: d => commit('', () => { const k = lastSunday(); (state.audits[k] ||= {})[d.k] = !((state.audits[k] || {})[d.k]); }, false),
+
+  // library
+  libCat: d => { ui.libCat = d.c; ui.libEdit = null; render(); },
+  libEdit: d => { ui.libEdit = ui.libEdit === d.id ? null : d.id; render(); },
+  libNew: () => {
+    const it = { id: uid(), name: 'New item', kcal: 0, p: 0, c: 0, f: 0, note: '' };
+    const arr = libArray(ui.libCat); if (!arr) return;
+    commit('Item added', () => arr.unshift(it)); ui.libEdit = it.id; render();
+  },
+  libSave: d => {
+    const f = $(`[data-form="${d.id}"]`), v = n => $(`[name=${n}]`, f).value;
+    const target = ui.libCat === 'family' ? famItem(d.id) : libArray(ui.libCat).find(x => x.id === d.id);
+    if (!target) return;
+    ui.libEdit = null;
+    commit('Saved', () => Object.assign(target, { name: v('n').trim() || target.name, kcal: r0(v('k')), p: r0(v('p')), c: r0(v('c')), f: r0(v('f')), note: v('note').trim() }));
+  },
+  libDup: d => {
+    const arr = libArray(ui.libCat), src = arr.find(x => x.id === d.id); if (!src) return;
+    const copy = { ...clone(src), id: uid(), name: src.name + ' (tweaked)' };
+    const isTo = state.takeout[ui.libCat];
+    commit('Duplicated — tweak away', () => {
+      if (isTo && ui.libCat !== 'mine') { state.takeout.mine.items.unshift(copy); } else { arr.splice(arr.indexOf(src) + 1, 0, copy); }
+    });
+    if (isTo) ui.libCat = 'mine';
+    ui.libEdit = copy.id; render();
+  },
+  libDel: d => { const arr = libArray(ui.libCat), it = arr.find(x => x.id === d.id); if (!it) return;
+    commit(`Deleted ${it.name}`, () => arr.splice(arr.indexOf(it), 1)); },
+
+  // settings
+  tier: d => { ui.armed = null; commit(`Tier: ${state.tiers[d.t].label}`, () => { state.settings.tier = d.t; }); },
+  saveTargets: () => {
+    const T = tier(), v = n => r0($(`[name=${n}]`).value);
+    const kc = v('tk');
+    commit(kc < KCAL_FLOOR ? `Saved — calories held at the ${fmt(KCAL_FLOOR)} floor` : 'Targets saved', () => {
+      T.kcal = Math.max(KCAL_FLOOR, kc); T.p = v('tp'); T.c = v('tc'); T.f = v('tf'); state.settings.stepsGoal = v('sg') || state.settings.stepsGoal;
+    });
+  },
+  saveSlots: () => {
+    const T = tier();
+    commit('Slot budgets saved', () => state.slots.forEach(s => {
+      const n = $(`[name="sn_${s.id}"]`).value.trim(); if (n) s.name = n;
+      T.slots[s.id] = [r0($(`[name="sk_${s.id}"]`).value), r0($(`[name="sp_${s.id}"]`).value)];
+    }));
+  },
+  exportJson: () => exportBackup(),
+  copyJson: async () => { const txt = exportString(); try { await navigator.clipboard.writeText(txt); markBackup(); toast('Backup JSON copied'); } catch (e) { ui.impText = txt; $('[name=imp]').value = txt; toast('Copy blocked — JSON placed in the box below'); } },
+  importJson: () => arm('import', () => { const txt = (ui.impText || '').trim(); if (!txt) { toast('Paste JSON or choose a file first'); return; } if (importString(txt)) { ui.impText = ''; render(); } }),
+  resetLib: () => arm('resetlib', () => commit('Library reset to seed', () => { const f = fresh(); state.library = f.library; state.takeout = Object.assign(f.takeout, { mine: state.takeout.mine }); state.family = f.family; })),
+  wipe: () => arm('wipe', () => commit('All data erased', () => { state = fresh(); })),
+};
+function arm(key, fn) { if (ui.armed === key) { ui.armed = null; fn(); } else { ui.armed = key; render(); setTimeout(() => { if (ui.armed === key) { ui.armed = null; render(); } }, 4000); } }
+function libArray(cat) { return state.library[cat] || (state.takeout[cat] && state.takeout[cat].items) || null; }
+function famItem(id) { const [g, k] = id.split(':'); return (state.family[g] || {})[k]; }
+
+/* export / import */
+function exportString() { return JSON.stringify({ app: 'slots', exported_at: new Date().toISOString(), state }, null, 1); }
+function markBackup() { state.settings.lastBackup = today(); state.settings.backupSnooze = null; save(); render(); }
+async function exportBackup() {
+  markBackup();
+  const txt = exportString(), name = `slots-backup-${today()}.json`;
+  const file = new File([txt], name, { type: 'application/json' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); toast('Backup exported'); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Backup downloaded');
+}
+function importString(txt) {
+  let obj; try { obj = JSON.parse(txt); } catch (e) { toast('That isn’t valid JSON'); return false; }
+  const s = obj && obj.state ? obj.state : obj;
+  if (!valid(s)) { toast('Not a Slots backup'); return false; }
+  commit(`Imported ${Object.keys(s.days).length} days`, () => { state = migrate(clone(s)); });
+  return true;
+}
+
+/* ============================== render ============================== */
+const ICON = {
+  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="4" rx="2"/><rect x="4" y="10" width="11" height="4" rx="2"/><rect x="4" y="16" width="14" height="4" rx="2"/></svg>',
+  library: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 4h4v16H5zM11 4h4v16h-4z"/><path d="M17 5l3 .8-3.6 14-3-.8"/></svg>',
+  week: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V12M10 20V7M15 20v-9M20 20V4"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
+};
+function renderNav() {
+  $('#nav').innerHTML = ['today', 'library', 'week', 'settings'].map(s =>
+    `<button data-act="nav" data-s="${s}" class="${ui.screen === s ? 'on' : ''}" aria-label="${s}">${ICON[s]}<span>${s[0].toUpperCase() + s.slice(1)}</span></button>`).join('');
+}
+function render() {
+  renderNav();
+  const app = $('#app');
+  app.innerHTML = ({ today: vToday, library: vLibrary, week: vWeek, settings: vSettings })[ui.screen]();
+}
+const pct = (a, b) => b > 0 ? Math.max(0, Math.min(100, a / b * 100)) : (a > 0 ? 100 : 0);
+const macroLine = it => `${fmt(it.kcal)} kcal · <b style="color:var(--acc)">${r0(it.p)}P</b> · ${r0(it.c)}C · ${r0(it.f)}F`;
+
+function vToday() {
+  const k = ui.date, T = tier(), t = totals(k), b = budgets(k), D = peekDay(k), isToday = k === today(), fut = isFuture(k);
+  const pLeft = Math.max(0, T.p - t.p), kLeft = T.kcal - t.kcal, C = 2 * Math.PI * 56;
+  const pFrac = pct(t.p, T.p) / 100, plannedCount = D.entries.filter(e => e.planned).length;
+  const st = streak();
+  let h = `
+  <div class="top">
+    <button class="navbtn" data-act="day" data-n="-1" aria-label="Previous day">‹</button>
+    <button class="datebtn" data-act="day" data-k="today"><b>${isToday ? 'Today' : fut ? 'Plan · ' + wd(k) : wd(k)}</b><span class="muted small">${dayLabel(k)}</span></button>
+    <button class="navbtn" data-act="day" data-n="1" aria-label="Next day">›</button>
+    <button class="chip-tier" data-act="nav" data-s="settings">${esc(T.label)}</button>
+  </div>
+  <div class="card hero">
+    <div class="ring">
+      <svg width="132" height="132" viewBox="0 0 132 132"><circle cx="66" cy="66" r="56" fill="none" stroke="var(--s3)" stroke-width="12"/>
+      <circle cx="66" cy="66" r="56" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pFrac)}"/></svg>
+      <div class="c">${pLeft > 0 ? `<div class="big">${fmt(pLeft)}<span style="font-size:18px">g</span></div><div class="lbl">protein to go</div>` : `<div class="big" style="color:var(--acc)">✓</div><div class="lbl">${fmt(t.p)}g protein</div>`}</div>
+    </div>
+    <div class="kcbox">
+      <div class="muted small">Protein ${fmt(t.p)} / ${fmt(T.p)} g</div>
+      <div class="kcnum" style="margin-top:8px">${fmt(Math.abs(kLeft))} <span class="muted small" style="font-weight:500">kcal ${kLeft >= 0 ? 'left' : 'past target'}</span></div>
+      <div class="bar" style="margin-top:6px"><i class="${t.kcal > T.kcal ? 'over' : 'k'}" style="width:${pct(t.kcal, T.kcal)}%"></i></div>
+      <div class="muted tiny" style="margin-top:4px">${fmt(t.kcal)} of ${fmt(T.kcal)}${t.plannedKcal ? ` · ${fmt(t.plannedKcal)} planned` : ''}</div>
+      <div class="macros"><span>C <b>${fmt(Math.max(0, T.c - t.c))}</b> left</span><span>F <b>${fmt(Math.max(0, T.f - t.f))}</b> left</span></div>
+    </div>
+  </div>`;
+  if (isToday && backupDue()) h += `<div class="banner"><span class="sp">Monthly backup — takes ten seconds.</span><button class="btn pri sm" data-act="exportJson">Export</button><button class="btn ghost sm" data-act="snooze">Later</button></div>`;
+  if (isToday && kdate(k).getDay() === 0) { const a = state.audits[lastSunday()] || {}; const n = AUDIT.filter(x => a[x.k]).length;
+    if (n < AUDIT.length) h += `<div class="banner"><span class="sp">Sunday speed audit · ${n}/${AUDIT.length}</span><button class="btn sm" data-act="nav" data-s="week">Open</button></div>`; }
+  if (plannedCount && !fut) h += `<div class="banner"><span class="sp">${plannedCount} planned item${plannedCount > 1 ? 's' : ''} — confirm as you eat.</span><button class="btn pri sm" data-act="confirmAll">Confirm all</button></div>`;
+  if (fut) h += `<div class="banner"><span class="sp muted">Planning ahead. Items here are ghosts until you confirm them on the day.</span></div>`;
+
+  h += state.slots.map(s => vSlot(s, D, b[s.id], k)).join('');
+
+  // steps + plan tomorrow + streak
+  h += `<h2>${fut ? 'This day' : 'Tomorrow'}</h2><div class="card stack">`;
+  if (!fut) h += `<button class="btn" data-act="copyTomorrow">Copy ${isToday ? 'today' : 'this day'} → ${wd(addDays(k, 1))}</button>`;
+  h += state.templates.length ? `<div class="small muted">Day templates</div><div class="opts">${state.templates.map(tp => {
+      const tt = tp.entries.reduce((a, e) => (a.k += e.kcal, a.p += e.p, a), { k: 0, p: 0 });
+      return `<button class="opt" data-act="applyTpl" data-id="${tp.id}" data-to="${fut ? 'here' : 'next'}"><div class="on"><div>${esc(tp.name)}</div><div class="muted tiny">${tp.entries.length} items → ${fut ? 'this day' : wd(addDays(k, 1))}</div></div><div class="mac"><b>${fmt(tt.p)}P</b>${fmt(tt.k)} kcal</div></button>`; }).join('')}</div>` : '';
+  h += ui.tplName
+    ? `<div class="row"><input name="tplname" placeholder="Template name" maxlength="40"><button class="btn pri sm" data-act="saveTpl">Save</button></div>`
+    : `<button class="btn ghost" data-act="tplNameToggle">Save ${isToday ? 'today' : 'this day'} as template</button>`;
+  h += `</div>`;
+  if (!fut) h += `<h2>Steps</h2><div class="card row"><input name="steps" data-k="${k}" type="number" inputmode="numeric" placeholder="Steps ${isToday ? 'today' : 'this day'}" value="${D.steps ?? ''}"><span class="muted small" style="white-space:nowrap">goal ${fmt(state.settings.stepsGoal)}</span></div>`;
+  h += `<div class="row" style="margin-top:18px;justify-content:center"><span class="streak ${st.dim ? 'dim' : ''}"><span style="color:var(--acc)">●</span> ${fmt(st.count)} day${st.count === 1 ? '' : 's'} logged</span></div>`;
+  return h;
+}
+
+function vSlot(s, D, bud, k) {
+  const es = D.entries.filter(e => e.slot === s.id);
+  const used = es.filter(e => !e.planned).reduce((a, e) => (a.k += e.kcal, a.p += e.p, a), { k: 0, p: 0 });
+  const plan = es.filter(e => e.planned).reduce((a, e) => a + e.kcal, 0);
+  const open = ui.open === s.id;
+  const over = used.k > bud.kcal && bud.kcal > 0;
+  const tags = (s.protected ? '<span class="lock">PROTECTED</span>' : '') +
+    (bud.borrowed ? `<span class="borrowtag">+${fmt(bud.borrowed)} borrowed</span>` : '') +
+    (bud.lent ? `<span class="borrowtag">lent ${fmt(bud.lent)}</span>` : '');
+  let h = `<section class="slot ${open ? 'open' : ''}" data-slot="${s.id}">
+    <div class="slot-h">
+      <div class="row"><div class="sp"><span class="name">${esc(s.name)}</span>${tags}</div>
+        <div class="slot-nums">${bud.p ? `<b>${fmt(used.p)}</b>/${fmt(bud.p)} g P<br>` : ''}${fmt(used.k)}/${fmt(Math.max(0, bud.kcal))} kcal</div></div>
+      <div class="slot-bars">
+        ${bud.p ? `<div class="bar thin"><i class="p" style="width:${pct(used.p, bud.p)}%"></i></div>` : ''}
+        <div class="bar thin"><i class="pl" style="width:${pct(used.k + plan, bud.kcal)}%"></i><i class="${over ? 'over' : 'k'}" style="width:${pct(used.k, bud.kcal)}%"></i></div>
+      </div>
+    </div>`;
+  if (es.length) h += `<div class="entries">${es.map(e => `
+    <div class="entry ${e.planned ? 'planned' : ''}">
+      <div class="en"><div>${esc(e.name)}</div><div class="muted tiny">${e.planned ? 'planned · ' : ''}${fmt(e.kcal)} kcal · ${fmt(e.p)}g P${e.borrow ? ` · borrowed ${fmt(e.borrow.kcal)} from ${esc(slotName(e.borrow.from))}` : ''}</div></div>
+      ${e.planned && !isFuture(k) ? `<button class="confirm" data-act="confirm" data-id="${e.id}">Confirm</button>` : ''}
+      <button class="x" data-act="rm" data-id="${e.id}" aria-label="Remove">×</button>
+    </div>`).join('')}</div>`;
+  if (open) h += `<div class="pane" data-pane="${s.id}">${ui.pending && ui.pending.slot === s.id ? vBorrow(s, k) : vPane(s)}</div>`;
+  else h += `<button class="addbtn" data-act="open" data-slot="${s.id}">+ Add to ${esc(s.name)}</button>`;
+  return h + '</section>';
+}
+
+function vBorrow(s, k) {
+  const e = ui.pending, opts = borrowOptions(k, s.id);
+  return `<div class="borrow"><p><b>${esc(e.name)}</b> is ${fmt(e.kcal)} kcal — a two-slot meal. Which slot does it borrow from?</p>
+    <div class="opts">${opts.map(o => `<button class="opt" data-act="borrow" data-from="${o.from}"><div class="on"><div>${esc(o.label)}</div>${o.used ? '<div class="muted tiny">already lent today</div>' : ''}</div><div class="mac"><b>${fmt(o.kcal)}</b>kcal</div></button>`).join('')}</div>
+    <p class="muted tiny" style="margin:10px 0">Dessert stays protected.</p>
+    <div class="grid2"><button class="btn ghost" data-act="noBorrow">Log, no borrow</button><button class="btn ghost" data-act="cancelBorrow">Cancel</button></div></div>`;
+}
+
+function vPane(s) {
+  const tabs = [];
+  if (s.lib) tabs.push(['opts', 'Options']);
+  if (s.family) tabs.push(['family', 'Family meal']);
+  if (s.takeout) tabs.push(['takeout', 'Takeout']);
+  tabs.push(['guess', 'Best guess'], ['custom', 'Numbers']);
+  const cur = tabs.some(t => t[0] === ui.tab[s.id]) ? ui.tab[s.id] : tabs[0][0];
+  let h = `<div class="tabs">${tabs.map(([id, l]) => `<button class="tab ${cur === id ? 'on' : ''}" data-act="tab" data-slot="${s.id}" data-t="${id}">${l}</button>`).join('')}</div>`;
+  const optBtn = (it, src) => `<button class="opt" data-act="pick" data-slot="${s.id}" data-src="${src}" data-id="${it.id}"><div class="on"><div>${esc(it.name)}</div>${it.note ? `<div class="muted tiny">${esc(it.note)}</div>` : ''}</div><div class="mac"><b>${fmt(it.p)}g</b>${fmt(it.kcal)} kcal</div></button>`;
+  if (cur === 'opts') { const L = libFor(s.id); h += L.length ? `<div class="opts">${L.map(it => optBtn(it, s.lib)).join('')}</div>` : '<p class="muted small">No options yet — add some in Library.</p>'; }
+  if (cur === 'takeout') {
+    const cats = Object.keys(state.takeout), c = state.takeout[ui.toCat] ? ui.toCat : cats[0];
+    h += `<div class="tabs">${cats.map(id => `<button class="tab ${c === id ? 'on' : ''}" data-act="toCat" data-c="${id}">${esc(state.takeout[id].label)}</button>`).join('')}</div>`;
+    const items = state.takeout[c].items;
+    h += items.length ? `<div class="opts">${items.map(it => optBtn(it, 'to')).join('')}</div>` : `<p class="muted small">Empty. In Library, “Duplicate & tweak” any takeout item to make it yours.</p>`;
+  }
+  if (cur === 'family') {
+    const F = state.family, z = F.sizes, sel = z[ui.fam.size], ad = ui.fam.add ? F.addons[ui.fam.add] : null;
+    const tk = sel.kcal + (ad ? ad.kcal : 0), tp = sel.p + (ad ? ad.p : 0);
+    h += `<div class="seg">${Object.keys(z).map(id => `<button class="${ui.fam.size === id ? 'on' : ''}" data-act="famSize" data-v="${id}">${id[0].toUpperCase() + id.slice(1)}<small>~${fmt(z[id].kcal)}</small></button>`).join('')}</div>
+      <div class="small muted" style="margin:12px 0 6px">Protein add-on</div>
+      <div class="seg">${Object.keys(F.addons).map(id => `<button class="${ui.fam.add === id ? 'on' : ''}" data-act="famAdd" data-v="${id}">${esc(F.addons[id].name)}<small>+${F.addons[id].p}g P</small></button>`).join('')}</div>
+      <button class="btn pri" style="margin-top:12px" data-act="famLog" data-slot="${s.id}">Log family meal · ${fmt(tp)}g P · ${fmt(tk)} kcal</button>`;
+  }
+  if (cur === 'guess') h += `<p class="muted small" style="margin-top:0">Unplanned? Ballpark it. Slots adds 20% so the estimate leans honest — that’s all.</p>
+    <div class="grid2"><label class="f">Calories (guess)<input name="gk" type="number" inputmode="numeric" placeholder="e.g. 800"></label>
+    <label class="f">Protein g (optional)<input name="gp" type="number" inputmode="numeric" placeholder="e.g. 35"></label></div>
+    <label class="f" style="margin-top:8px">What was it? (optional)<input name="gn" placeholder="Unplanned meal" maxlength="60"></label>
+    <button class="btn pri" style="margin-top:12px" data-act="guess" data-slot="${s.id}">Log best guess (+20%)</button>`;
+  if (cur === 'custom') h += `<label class="f">Name<input name="cn" placeholder="What is it?" maxlength="60"></label>
+    <div class="grid4" style="margin-top:8px"><label class="f">kcal<input name="ck" type="number" inputmode="numeric"></label><label class="f">P<input name="cp" type="number" inputmode="numeric"></label><label class="f">C<input name="cc" type="number" inputmode="numeric"></label><label class="f">F<input name="cf" type="number" inputmode="numeric"></label></div>
+    <label class="check"><input type="checkbox" name="csave"> Save to My orders</label>
+    <button class="btn pri" data-act="custom" data-slot="${s.id}">Log it</button>`;
+  return h + `<button class="btn ghost" style="margin-top:12px" data-act="open" data-slot="${s.id}">Close</button>`;
+}
+
+/* ---------- week ---------- */
+const AUDIT = [
+  { k: 'steps', l: 'Steps averaged at goal' },
+  { k: 'protein', l: 'Protein hit 5+ days' },
+  { k: 'takeout', l: 'Every takeout meal logged' },
+  { k: 'weekend', l: 'No weekend gap (Fri–Sun logged)' },
+  { k: 'liquid', l: 'Liquid calories logged (drinks, creamer, alcohol)' },
+  { k: 'sleep', l: 'Sleep ~7 h most nights' },
+  { k: 'sessions', l: 'Training sessions done' }
+];
+function weekStats(end = today()) {
+  const keys = Array.from({ length: 7 }, (_, i) => addDays(end, i - 6));
+  const T = tier(), L = keys.filter(logged), S = keys.map(k => peekDay(k).steps).filter(v => v != null && v !== '');
+  const sum = (a, f) => a.reduce((x, y) => x + f(y), 0);
+  return {
+    keys, logged: L.length,
+    kcal: L.length ? sum(L, k => totals(k).kcal) / L.length : 0,
+    p: L.length ? sum(L, k => totals(k).p) / L.length : 0,
+    steps: S.length ? sum(S, Number) / S.length : 0, stepsN: S.length,
+    pDays: keys.filter(k => logged(k) && totals(k).p >= T.p).length,
+    takeout: sum(keys, k => peekDay(k).entries.filter(e => !e.planned && e.kind === 'takeout').length),
+    weekend: keys.filter(k => [5, 6, 0].includes(kdate(k).getDay())).map(k => wd(k) + (logged(k) ? ' ✓' : ' –')).join('  ')
+  };
+}
+function vWeek() {
+  const w = weekStats(), T = tier(), st = streak(), M = readShared(), t = today();
+  const hint = { steps: `${fmt(w.steps)} avg`, protein: `${w.pDays}/7`, takeout: `${w.takeout} logged`, weekend: w.weekend };
+  const a = state.audits[lastSunday()] || {};
+  let h = `<div class="top"><h1 class="sp">Week</h1><span class="muted small">${dayLabel(w.keys[0])} – ${dayLabel(w.keys[6])}</span></div>
+  <div class="tiles">
+    <div class="tile hero"><div class="v">${fmt(w.p)}<span style="font-size:14px">g</span></div><div class="k">avg protein · target ${fmt(T.p)}</div></div>
+    <div class="tile"><div class="v">${fmt(w.kcal)}</div><div class="k">avg kcal · target ${fmt(T.kcal)}</div></div>
+    <div class="tile"><div class="v">${w.stepsN ? fmt(w.steps) : '—'}</div><div class="k">avg steps${w.stepsN ? ` · ${w.stepsN} days entered` : ''}</div></div>
+    <div class="tile"><div class="v">${w.logged}<span style="font-size:14px">/7</span></div><div class="k">days logged · protein hit ${w.pDays}</div></div>
+  </div>`;
+  if (M.latest_weight != null || M.trend_7d != null) h += `<div class="banner"><span class="sp muted">From Meter</span>${M.latest_weight != null ? `<b>${esc(M.latest_weight)}</b>` : ''}${M.trend_7d != null ? `<span class="muted small">7d ${esc(M.trend_7d)}</span>` : ''}</div>`;
+  h += `<h2>Days</h2><div class="card" style="padding:4px 14px">
+    <div class="drow muted tiny" style="border:0"><span></span><span>kcal</span><span>protein</span><span style="text-align:right">steps</span></div>
+    ${w.keys.slice().reverse().map(k => { const tt = totals(k), lg = logged(k), D = peekDay(k);
+      return `<div class="drow"><span><b>${wd(k)}</b><br><span class="muted tiny">${kdate(k).getDate()}</span></span>
+      <span>${lg ? fmt(tt.kcal) : '<span class="muted">—</span>'}</span>
+      <span>${lg ? fmt(tt.p) + 'g' + (tt.p >= T.p ? '<span class="ok">✓</span>' : '') : '<span class="muted">—</span>'}</span>
+      <input name="steps" data-k="${k}" type="number" inputmode="numeric" value="${D.steps ?? ''}" placeholder="—"></div>`; }).join('')}
+  </div>
+  <h2>Logging</h2><div class="card"><div class="row"><span class="streak ${st.dim ? 'dim' : ''}">${fmt(st.count)} day${st.count === 1 ? "" : "s"} logged</span><span class="sp"></span><span class="muted tiny">misses dim it, never reset it</span></div>
+    <div class="dots" style="margin-top:12px">${Array.from({ length: 14 }, (_, i) => addDays(t, i - 13)).map(k => `<span class="dot ${logged(k) ? 'on' : ''} ${k === t ? 'today' : ''}" title="${k}"></span>`).join('')}</div></div>
+  <h2>Sunday speed audit</h2><div class="card" style="padding:4px 14px">
+    ${AUDIT.map(x => `<label class="check"><input type="checkbox" data-act="audit" data-k="${x.k}" ${a[x.k] ? 'checked' : ''}><span class="sp">${x.l}</span>${hint[x.k] ? `<span class="muted tiny" style="text-align:right">${esc(hint[x.k])}</span>` : ''}</label>`).join('')}
+  </div><p class="muted tiny">Week of ${dayLabel(lastSunday())}. Checks reset each Sunday.</p>`;
+  return h;
+}
+
+/* ---------- library ---------- */
+function libCats() {
+  return [['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['shake', 'Shake'], ['dessert', 'Dessert'],
+    ...Object.keys(state.takeout).map(k => [k, state.takeout[k].label]), ['family', 'Family meal']];
+}
+function itemForm(it, id) {
+  const est = r0(it.p) * 4 + r0(it.c) * 4 + r0(it.f) * 9;
+  return `<div class="form" data-form="${id}">
+    <label class="f">Name<input name="n" value="${esc(it.name)}" maxlength="60"></label>
+    <div class="grid4" style="margin-top:8px"><label class="f">kcal<input name="k" type="number" inputmode="numeric" value="${r0(it.kcal)}"></label><label class="f">P<input name="p" type="number" inputmode="numeric" value="${r0(it.p)}"></label><label class="f">C<input name="c" type="number" inputmode="numeric" value="${r0(it.c)}"></label><label class="f">F<input name="f" type="number" inputmode="numeric" value="${r0(it.f)}"></label></div>
+    <div class="muted tiny" style="margin-top:6px">Macros add up to ≈ ${fmt(est)} kcal</div>
+    <label class="f" style="margin-top:8px">Note<input name="note" value="${esc(it.note || '')}" maxlength="140"></label>
+    <div class="grid2" style="margin-top:10px"><button class="btn ghost" data-act="libEdit" data-id="${id}">Cancel</button><button class="btn pri" data-act="libSave" data-id="${id}">Save</button></div></div>`;
+}
+function vLibrary() {
+  const c = ui.libCat;
+  let h = `<div class="top"><h1 class="sp">Library</h1></div><div class="tabs">${libCats().map(([id, l]) => `<button class="tab ${c === id ? 'on' : ''}" data-act="libCat" data-c="${id}">${esc(l)}</button>`).join('')}</div>`;
+  if (c === 'family') {
+    const F = state.family;
+    const rows = [...Object.keys(F.sizes).map(k => ['sizes:' + k, F.sizes[k]]), ...Object.keys(F.addons).map(k => ['addons:' + k, F.addons[k]])];
+    h += `<p class="muted small">Dinner quick-log sizes and protein add-ons.</p><div class="card" style="padding:0 14px">${rows.map(([id, it]) => `<div class="libitem"><div class="row"><div class="sp"><div><b>${esc(it.name)}</b></div><div class="muted small">${macroLine(it)}</div></div><button class="btn sm" data-act="libEdit" data-id="${id}">Edit</button></div>${ui.libEdit === id ? itemForm(it, id) : ''}</div>`).join('')}</div>`;
+    return h;
+  }
+  const arr = libArray(c) || [];
+  h += `<button class="btn pri" data-act="libNew">+ New item</button><div class="card" style="padding:0 14px;margin-top:12px">`;
+  h += arr.length ? arr.map(it => `<div class="libitem"><div><b>${esc(it.name)}</b></div><div class="muted small">${macroLine(it)}</div>${it.note ? `<div class="muted tiny">${esc(it.note)}</div>` : ''}
+      ${ui.libEdit === it.id ? itemForm(it, it.id) : `<div class="acts"><button class="btn sm" data-act="libEdit" data-id="${it.id}">Edit</button><button class="btn sm" data-act="libDup" data-id="${it.id}">Duplicate & tweak</button><button class="btn ghost sm" data-act="libDel" data-id="${it.id}">Delete</button></div>`}</div>`).join('')
+    : `<p class="muted small" style="padding:8px 0">Nothing here yet. “Duplicate & tweak” any takeout item to save your usual order.</p>`;
+  return h + '</div>';
+}
+
+/* ---------- settings ---------- */
+function vSettings() {
+  const T = tier(), S = state.settings;
+  const sumK = state.slots.reduce((a, s) => a + (T.slots[s.id] || [0])[0], 0), sumP = state.slots.reduce((a, s) => a + (T.slots[s.id] || [0, 0])[1], 0);
+  const armedTxt = (key, idle, armed) => ui.armed === key ? armed : idle;
+  let h = `<div class="top"><h1 class="sp">Settings</h1></div>
+  <h2>Tier</h2><div class="seg">${Object.keys(state.tiers).map(id => `<button class="${S.tier === id ? 'on' : ''}" data-act="tier" data-t="${id}">${esc(state.tiers[id].label)}<small>${fmt(state.tiers[id].kcal)}</small></button>`).join('')}</div>
+  ${T.note ? `<div class="pushnote">${esc(T.note)}</div>` : ''}
+  <p class="muted tiny">Nothing below ${fmt(KCAL_FLOOR)} kcal is offered.</p>
+  <h2>${esc(T.label)} targets</h2><div class="card">
+    <div class="grid4"><label class="f">kcal<input name="tk" type="number" inputmode="numeric" min="${KCAL_FLOOR}" value="${T.kcal}"></label><label class="f">Protein<input name="tp" type="number" inputmode="numeric" value="${T.p}"></label><label class="f">Carbs<input name="tc" type="number" inputmode="numeric" value="${T.c}"></label><label class="f">Fat<input name="tf" type="number" inputmode="numeric" value="${T.f}"></label></div>
+    <label class="f" style="margin-top:8px">Daily steps goal<input name="sg" type="number" inputmode="numeric" value="${S.stepsGoal}"></label>
+    <button class="btn pri" style="margin-top:12px" data-act="saveTargets">Save targets</button></div>
+  <h2>${esc(T.label)} slot budgets</h2><div class="card">
+    ${state.slots.map(s => `<div style="display:grid;grid-template-columns:1fr 84px 70px;gap:8px;margin-bottom:8px;align-items:end">
+      <label class="f">${s.protected ? 'Protected · never borrowed from' : 'Slot'}<input name="sn_${s.id}" value="${esc(s.name)}" maxlength="24"></label>
+      <label class="f">kcal<input name="sk_${s.id}" type="number" inputmode="numeric" value="${(T.slots[s.id] || [0])[0]}"></label>
+      <label class="f">P g<input name="sp_${s.id}" type="number" inputmode="numeric" value="${(T.slots[s.id] || [0, 0])[1]}"></label></div>`).join('')}
+    <div class="muted small">Slots add up to ${fmt(sumK)} kcal / ${fmt(sumP)} g P · target ${fmt(T.kcal)} / ${fmt(T.p)}</div>
+    <button class="btn pri" style="margin-top:12px" data-act="saveSlots">Save slot budgets</button></div>
+  <h2>Day templates</h2><div class="card" style="padding:4px 14px">${state.templates.length ? state.templates.map(t => `<div class="row" style="min-height:56px;border-bottom:1px solid var(--line)"><span class="sp">${esc(t.name)} <span class="muted tiny">· ${t.entries.length} items</span></span><button class="x" data-act="delTpl" data-id="${t.id}" aria-label="Delete">×</button></div>`).join('') : '<p class="muted small">None yet. Save one from Today.</p>'}</div>
+  <h2>Backup</h2><div class="card stack">
+    <div class="muted small">Last backup: ${S.lastBackup ? dayLabel(S.lastBackup) : 'never'}. You’ll get a nudge monthly.</div>
+    <div class="grid2"><button class="btn pri" data-act="exportJson">Export JSON</button><button class="btn" data-act="copyJson">Copy JSON</button></div>
+    <label class="btn ghost" style="display:grid;place-items:center">Choose backup file…<input type="file" accept="application/json,.json" id="impfile" hidden></label>
+    <textarea name="imp" placeholder="…or paste backup JSON here">${esc(ui.impText || '')}</textarea>
+    <button class="btn" data-act="importJson">${armedTxt('import', 'Import (replaces everything)', 'Tap again to replace all data')}</button></div>
+  <h2>Data</h2><div class="card stack">
+    <button class="btn ghost" data-act="resetLib">${armedTxt('resetlib', 'Reset library to seed (keeps My orders)', 'Tap again to reset library')}</button>
+    <button class="btn ghost" data-act="wipe">${armedTxt('wipe', 'Erase all data', 'Tap again to erase everything')}</button></div>
+  <p class="muted tiny" style="margin-top:18px">Slots v1.0 · activecatalyst · data stays on this device (<code>slots_state</code>). Seed values are estimates — edit them in Library.</p>`;
+  return h;
+}
+
+/* ============================== events ============================== */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  if (el.tagName === 'INPUT' && el.type === 'checkbox') return; // handled on change
+  const fn = A[el.dataset.act]; if (fn) { e.preventDefault(); fn(el.dataset); }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.matches('input[type=checkbox][data-act]')) { A[el.dataset.act](el.dataset); return; }
+  if (el.name === 'steps') {
+    const k = el.dataset.k, v = el.value === '' ? null : Math.max(0, r0(el.value));
+    commit(v == null ? 'Steps cleared' : `${fmt(v)} steps saved`, () => { day(k).steps = v; });
+  }
+  if (el.id === 'impfile' && el.files[0]) { el.files[0].text().then(txt => { ui.impText = txt; $('[name=imp]').value = txt; toast('File loaded — tap Import'); }); }
+});
+document.addEventListener('input', e => { if (e.target.name === 'imp') ui.impText = e.target.value; });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const pane = e.target.closest('[data-pane]');
+  if (pane) { const b = pane.querySelector('.btn.pri'); if (b) { e.preventDefault(); b.click(); } }
+  if (e.target.name === 'tplname') { e.preventDefault(); A.saveTpl(); }
+});
+window.addEventListener('storage', e => { if (e.key === KEY && e.newValue) { try { const s = JSON.parse(e.newValue); if (valid(s)) { state = migrate(s); render(); } } catch (_) {} } });
+// Roll over to the new day if the app sits open past midnight.
+let lastToday = today();
+document.addEventListener('visibilitychange', () => { if (!document.hidden && today() !== lastToday) { if (ui.date === lastToday) ui.date = today(); lastToday = today(); save(); render(); } });
+
+save(); render();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// test hooks
+window.__slots = { get state() { return state; }, A, ui, budgets, borrowOptions, canBorrowFrom, exportString, importString, totals, streak, render };
+</script>
+</body>
+</html>
